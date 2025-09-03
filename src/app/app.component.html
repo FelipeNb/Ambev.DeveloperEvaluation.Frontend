@@ -1,0 +1,19 @@
+<p-toolbar>
+  <div class="p-toolbar-group-left">
+    <h3>Angular 16 · PrimeNG · CRUD</h3>
+  </div>
+</p-toolbar>
+
+<div class="p-grid" style="margin-top:1rem; gap: .5rem;">
+  <div class="p-col-12 p-md-4"><button pButton label="Users" (click)="show='users'"></button></div>
+  <div class="p-col-12 p-md-4"><button pButton label="Products" (click)="show='products'"></button></div>
+  <div class="p-col-12 p-md-4"><button pButton label="Carts" (click)="show='carts'"></button></div>
+</div>
+
+<hr />
+<div [ngSwitch]="show">
+  <app-users *ngSwitchCase="'users'"></app-users>
+  <app-products *ngSwitchCase="'products'"></app-products>
+  <app-carts *ngSwitchCase="'carts'"></app-carts>
+  <div *ngSwitchDefault>Escolha uma tela acima.</div>
+</div>

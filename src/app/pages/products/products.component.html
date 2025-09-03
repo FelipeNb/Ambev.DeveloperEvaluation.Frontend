@@ -1,0 +1,34 @@
+<p-card>
+  <div class="p-d-flex p-jc-between p-ai-center">
+    <h4>Products</h4>
+    <div>
+      <button pButton label="Novo" (click)="openCreate()"></button>
+    </div>
+  </div>
+
+  <p-table [value]="items$ | async" [loading]="loading$ | async">
+    <ng-template pTemplate="header">
+      <tr><th>Name</th><th>Price</th><th>Actions</th></tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-row>
+      <tr>
+        <td>{{row.name}}</td>
+        <td>{{row.price}}</td>
+        <td>
+          <button pButton icon="pi pi-pencil" (click)="openEdit(row)"></button>
+          <button pButton icon="pi pi-trash" (click)="remove(row.id)"></button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-card>
+
+<p-dialog header="Product" [(visible)]="displayDialog" [modal]="true">
+  <div class="p-fluid">
+    <div class="p-field"><label>Name</label><input pInputText name="name" [(ngModel)]="product.name" required></div>
+    <div class="p-field"><label>Price</label><input pInputText name="price" [(ngModel)]="product.price" type="number"></div>
+  </div>
+  <p-footer>
+    <button pButton label="Salvar" (click)="save()" [disabled]="!product.name"></button>
+  </p-footer>
+</p-dialog>
