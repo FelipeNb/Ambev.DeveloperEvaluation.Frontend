@@ -1,29 +1,91 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Subject, switchMap, tap, catchError, of } from 'rxjs';
 import { CartsService } from '../services/carts.service';
-import { Cart } from '../models/cart';
+import { Cart, CreateCartRequest, UpdateCartRequest, ListCartsResponse } from '../models/cart';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class CartsStore {
-  private refresh$ = new Subject<void>();
-  private _items$ = new BehaviorSubject<Cart[]>([]);
-  items$ = this._items$.asObservable();
-  loading$ = new BehaviorSubject<boolean>(false);
+  items: Cart[] = [];
+  loading = false;
+  totalItems = 0;
+  currentPage = 1;
+  totalPages = 0;
 
   constructor(private svc: CartsService) {
-    this.refresh$.pipe(
-      tap(() => this.loading$.next(true)),
-      switchMap(() => this.svc.list().pipe(
-        catchError(err => { console.error(err); return of([]); })
-      )),
-    ).subscribe(list => { this._items$.next(list); this.loading$.next(false); });
-
-    this.refresh();
+    this.load();
   }
 
-  refresh() { this.refresh$.next(); }
+  async load(page: number = 1, size: number = 10) {
+    this.loading = true;
+    try {
+      const response = await firstValueFrom(this.svc.list(page, size));
+      if (response?.success && response.data) {
+        this.items = response.data.items || [];
+        this.totalItems = response.data.totalItems;
+        this.currentPage = response.data.currentPage;
+        this.totalPages = response.data.totalPages;
+      } else {
+        this.items = [];
+        this.totalItems = 0;
+        this.currentPage = 1;
+        this.totalPages = 0;
+      }
+    } catch (err) {
+      console.error(err);
+      this.items = [];
+      this.totalItems = 0;
+      this.currentPage = 1;
+      this.totalPages = 0;
+    } finally {
+      this.loading = false;
+    }
+  }
 
-  create(c: Partial<Cart>) { return this.svc.create(c).pipe(tap(() => this.refresh())); }
-  update(id: any, c: Partial<Cart>) { return this.svc.update(id, c).pipe(tap(() => this.refresh())); }
-  delete(id: any) { return this.svc.delete(id).pipe(tap(() => this.refresh())); }
+  async create(c: CreateCartRequest) {
+    try {
+      const response = await firstValueFrom(this.svc.create(c));
+      if (response?.success) {
+        await this.load(this.currentPage);
+      }
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+
+  async update(id: string, c: UpdateCartRequest) {
+    try {
+      const response = await firstValueFrom(this.svc.update(id, c));
+      if (response?.success) {
+        await this.load(this.currentPage);
+      }
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+
+  async delete(id: string) {
+    try {
+      const response = await firstValueFrom(this.svc.delete(id));
+      if (response?.success) {
+        await this.load(this.currentPage);
+      }
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+
+  async cancel(id: string) {
+    try {
+      const response = await firstValueFrom(this.svc.cancel(id));
+      if (response?.success) {
+        await this.load(this.currentPage);
+      }
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
 }

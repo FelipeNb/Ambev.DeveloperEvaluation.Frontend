@@ -1,19 +1,29 @@
 <p-card>
-  <div class="p-d-flex p-jc-between p-ai-center">
+  <div style="display: flex; justify-content: space-between; align-items: center;">
     <h4>Users</h4>
     <div>
       <button pButton label="Novo" (click)="openCreate()"></button>
     </div>
   </div>
 
-  <p-table [value]="users$ | async" [loading]="loading$ | async">
+  <p-table [value]="users" [loading]="loading">
     <ng-template pTemplate="header">
-      <tr><th>Name</th><th>Email</th><th>Actions</th></tr>
+      <tr>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Name</th>
+        <th>Role</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
     </ng-template>
     <ng-template pTemplate="body" let-row>
       <tr>
-        <td>{{row.name}}</td>
+        <td>{{row.username}}</td>
         <td>{{row.email}}</td>
+        <td>{{row.name?.firstName}} {{row.name?.lastName}}</td>
+        <td>{{getRoleLabel(row.role)}}</td>
+        <td>{{getStatusLabel(row.status)}}</td>
         <td>
           <button pButton icon="pi pi-pencil" (click)="openEdit(row)"></button>
           <button pButton icon="pi pi-trash" (click)="remove(row.id)"></button>
@@ -23,12 +33,88 @@
   </p-table>
 </p-card>
 
-<p-dialog header="User" [(visible)]="displayDialog" [modal]="true">
+<p-dialog header="User" [(visible)]="displayDialog" [modal]="true" [style]="{width: '80vw'}">
   <div class="p-fluid">
-    <div class="p-field"><label>Name</label><input pInputText name="name" [(ngModel)]="user.name" required></div>
-    <div class="p-field"><label>Email</label><input pInputText name="email" [(ngModel)]="user.email"></div>
+    <div class="p-grid">
+      <div class="p-col-6">
+        <label>Username</label>
+        <input pInputText name="username" [(ngModel)]="user.username" required>
+      </div>
+      <div class="p-col-6">
+        <label>Email</label>
+        <input pInputText name="email" [(ngModel)]="user.email" type="email" required>
+      </div>
+    </div>
+    
+    <div class="p-grid">
+      <div class="p-col-6">
+        <label>Password</label>
+        <input pInputText name="password" [(ngModel)]="user.password" type="password" [required]="!editing">
+      </div>
+      <div class="p-col-6">
+        <label>Phone</label>
+        <input pInputText name="phone" [(ngModel)]="user.phone">
+      </div>
+    </div>
+
+    <div class="p-grid">
+      <div class="p-col-6">
+        <label>First Name</label>
+        <input pInputText name="firstName" [(ngModel)]="user.name!.firstName" required>
+      </div>
+      <div class="p-col-6">
+        <label>Last Name</label>
+        <input pInputText name="lastName" [(ngModel)]="user.name!.lastName" required>
+      </div>
+    </div>
+
+    <div class="p-grid">
+      <div class="p-col-6">
+        <label>Role</label>
+        <p-dropdown [options]="userRoles" [(ngModel)]="user.role" optionLabel="label" optionValue="value"></p-dropdown>
+      </div>
+      <div class="p-col-6">
+        <label>Status</label>
+        <p-dropdown [options]="userStatuses" [(ngModel)]="user.status" optionLabel="label" optionValue="value"></p-dropdown>
+      </div>
+    </div>
+
+    <h5>Address</h5>
+    <div class="p-grid">
+      <div class="p-col-6">
+        <label>City</label>
+        <input pInputText name="city" [(ngModel)]="user.address!.city">
+      </div>
+      <div class="p-col-6">
+        <label>Street</label>
+        <input pInputText name="street" [(ngModel)]="user.address!.street">
+      </div>
+    </div>
+
+    <div class="p-grid">
+      <div class="p-col-6">
+        <label>Number</label>
+        <input pInputText name="number" [(ngModel)]="user.address!.number" type="number">
+      </div>
+      <div class="p-col-6">
+        <label>Zipcode</label>
+        <input pInputText name="zipcode" [(ngModel)]="user.address!.zipcode">
+      </div>
+    </div>
+
+    <h5>Geolocation</h5>
+    <div class="p-grid">
+      <div class="p-col-6">
+        <label>Latitude</label>
+        <input pInputText name="lat" [(ngModel)]="user.address!.geoLocation.lat">
+      </div>
+      <div class="p-col-6">
+        <label>Longitude</label>
+        <input pInputText name="long" [(ngModel)]="user.address!.geoLocation.long">
+      </div>
+    </div>
   </div>
   <p-footer>
-    <button pButton label="Salvar" (click)="save()" [disabled]="!user.name"></button>
+    <button pButton label="Salvar" (click)="save()" [disabled]="!user.username || !user.email"></button>
   </p-footer>
 </p-dialog>

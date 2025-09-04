@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  apiBaseUrl: 'http://localhost:5000/api' // adjust to your backend base URL
+  apiBaseUrl: 'http://localhost:5119/api' // Voltar para URL completa com CORS configurado
 };

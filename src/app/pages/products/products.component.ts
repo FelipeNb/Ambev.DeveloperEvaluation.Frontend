@@ -1,38 +1,91 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ProductsStore } from '../../stores/products.store';
+import { Product, CreateProductRequest, UpdateProductRequest, RatingProduct } from '../../models/product';
 
 @Component({
   selector: 'app-products',
   templateUrl: './products.component.html'
 })
-export class ProductsComponent {
-  items$ = this.store.items$;
-  loading$ = this.store.loading$;
+export class ProductsComponent implements OnInit {
+  get items() { return this.store.items; }
+  get loading() { return this.store.loading; }
+
   displayDialog = false;
-  editing: any = null;
-  product: { id?: any; name: string; price: number } = { id: '', name: '', price: 0 };
+  editing: Product | null = null;
+  product: Partial<Product> = {
+    title: '',
+    price: 0,
+    description: '',
+    category: '',
+    image: '',
+    rating: { rate: 0, count: 0 }
+  };
 
   constructor(private store: ProductsStore) {}
 
+  ngOnInit() {
+    this.store.load();
+  }
+
   openCreate() {
     this.editing = null;
-    this.product = { id: '', name: '', price: 0 };
-    this.displayDialog = true;
-  }
-  openEdit(u: any) {
-    this.editing = u;
-    this.product = { id: u.id, name: u.name, price: u.price };
+    this.product = {
+      title: '',
+      price: 0,
+      description: '',
+      category: '',
+      image: '',
+      rating: { rate: 0, count: 0 }
+    };
     this.displayDialog = true;
   }
 
-  save() {
-    const val = { id: this.product.id, name: this.product.name, price: this.product.price };
+  async openEdit(p: Product) {
+
+    const product = await this.store.get(p.id);
+
+    this.editing = p;
+    this.product = {
+      id: product?.id,
+      title: product?.title,
+      price: product?.price,
+      description: product?.description,
+      category: product?.category,
+      image: product?.image,
+      rating: { ...product?.rating }
+    };
+    this.displayDialog = true;
+  }
+
+  async save() {
     if (this.editing) {
-      this.store.update(this.editing.id, val).subscribe(() => this.displayDialog = false);
+      const updateRequest: UpdateProductRequest = {
+        id: this.product.id!,
+        title: this.product.title,
+        price: this.product.price!,
+        description: this.product.description,
+        category: this.product.category,
+        image: this.product.image,
+        rating: this.product.rating!
+      };
+      await this.store.update(this.editing.id, updateRequest);
     } else {
-      this.store.create(val).subscribe(() => this.displayDialog = false);
+      const createRequest: CreateProductRequest = {
+        title: this.product.title,
+        price: this.product.price!,
+        description: this.product.description,
+        category: this.product.category,
+        image: this.product.image,
+        rating: this.product.rating!
+      };
+      await this.store.create(createRequest);
+    }
+    this.displayDialog = false;
+  }
+
+  async remove(id: string) {
+    if (confirm('Remover produto?')) {
+      await this.store.delete(id);
     }
   }
-
-  remove(id: any) { if (confirm('Remover produto?')) this.store.delete(id).subscribe(); }
 }

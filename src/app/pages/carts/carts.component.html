@@ -1,23 +1,44 @@
 <p-card>
-  <div class="p-d-flex p-jc-between p-ai-center">
+  <div style="display: flex; justify-content: space-between; align-items: center;">
     <h4>Carts</h4>
     <div>
       <button pButton label="Novo" (click)="openCreate()"></button>
     </div>
   </div>
 
-  <p-table [value]="items$ | async" [loading]="loading$ | async">
+  <p-table [value]="items" [loading]="loading">
     <ng-template pTemplate="header">
-      <tr><th>UserId</th><th>Items</th><th>Actions</th></tr>
+      <tr>
+        <th>Sale #</th>
+        <th>User</th>
+        <th>Branch</th>
+        <th>Items</th>
+        <th>Total</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
     </ng-template>
     <ng-template pTemplate="body" let-row>
       <tr>
-        <td>{{row.userId}}</td>
+        <td>{{row.saleNumber}}</td>
+        <td>{{getUserName(row.userId)}}</td>
+        <td>{{row.branch || 'N/A'}}</td>
         <td>
-          <ul><li *ngFor="let it of row.items">{{it.productId}} x {{it.quantity}}</li></ul>
+          <ul style="margin: 0; padding-left: 20px;">
+            <li *ngFor="let it of row.items">
+              {{getProductName(it.productId)}} x {{it.quantity}} ({{it.unitPrice | currency}})
+            </li>
+          </ul>
+        </td>
+        <td>{{row.totalAmount | currency}}</td>
+        <td>
+          <span [style]="row.cancelled ? 'color: red; font-weight: bold;' : 'color: green; font-weight: bold;'">
+            {{row.cancelled ? 'Cancelled' : 'Active'}}
+          </span>
         </td>
         <td>
-          <button pButton icon="pi pi-pencil" (click)="openEdit(row)"></button>
+          <button pButton icon="pi pi-pencil" (click)="openEdit(row)" [disabled]="row.cancelled"></button>
+          <button pButton icon="pi pi-times" (click)="cancel(row.id)" [disabled]="row.cancelled"></button>
           <button pButton icon="pi pi-trash" (click)="remove(row.id)"></button>
         </td>
       </tr>
@@ -25,27 +46,56 @@
   </p-table>
 </p-card>
 
-<p-dialog header="Cart" [(visible)]="displayDialog" [modal]="true" styleClass="p-fluid">
-  <div class="p-field">
-    <label>Usuário</label>
-    <p-dropdown [options]="users$ | async" optionLabel="name" optionValue="id" [(ngModel)]="cart.userId" placeholder="Select user"></p-dropdown>
-  </div>
+<p-dialog header="Cart" [(visible)]="displayDialog" [modal]="true" [style]="{width: '80vw'}">
+  <div class="p-fluid">
+    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+      <div style="flex: 1;">
+        <label>Usuário</label>
+        <p-dropdown
+          [options]="users"
+          optionLabel="username"
+          optionValue="id"
+          [(ngModel)]="cart.userId"
+          placeholder="Select user"
+          [disabled]="!!editing">
+        </p-dropdown>
+      </div>
+      <div style="flex: 1;">
+        <label>Branch</label>
+        <input pInputText name="branch" [(ngModel)]="cart.branch" placeholder="Branch name">
+      </div>
+    </div>
 
-  <div class="p-field">
-    <label>Produto</label>
-    <p-dropdown [options]="products$ | async" optionLabel="name" [(ngModel)]="selectedProduct" placeholder="Select product"></p-dropdown>
-  </div>
+    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+      <div style="flex: 3;">
+        <label>Produto</label>
+        <p-dropdown
+          [options]="products"
+          optionLabel="title"
+          [(ngModel)]="selectedProduct"
+          placeholder="Select product">
+        </p-dropdown>
+      </div>
+      <div style="flex: 1;">
+        <label>&nbsp;</label>
+        <button pButton label="Adicionar item" (click)="addItem()" [disabled]="!cart.userId || !selectedProduct"></button>
+      </div>
+    </div>
 
-  <div class="p-field">
-    <button pButton label="Adicionar item" (click)="addItem()" [disabled]="!cart.userId || !selectedProduct"></button>
-  </div>
-
-  <div class="p-field">
-    <label>Items</label>
-    <ul><li *ngFor="let it of cart.items">{{it.productId}} x {{it.quantity}}</li></ul>
+    <div class="p-field" *ngIf="cart.items && cart.items.length > 0">
+      <label>Items no carrinho</label>
+      <div class="p-card">
+        <ul style="margin: 0; padding-left: 20px;">
+          <li *ngFor="let it of cart.items; let i = index">
+            {{getProductName(it.productId)}} x {{it.quantity}} ({{getProductPrice(it.productId) | currency}})
+            <button pButton icon="pi pi-times" (click)="removeItem(i)" style="margin-left: 10px; padding: 2px 6px; background-color: #dc3545; border-color: #dc3545;"></button>
+          </li>
+        </ul>
+      </div>
+    </div>
   </div>
 
   <p-footer>
-    <button pButton label="Salvar" (click)="save()" [disabled]="!cart.userId"></button>
+    <button pButton label="Salvar" (click)="save()" [disabled]="!cart.userId || !cart.items || cart.items.length === 0"></button>
   </p-footer>
 </p-dialog>

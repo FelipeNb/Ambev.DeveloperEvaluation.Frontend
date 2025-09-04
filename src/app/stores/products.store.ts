@@ -1,29 +1,110 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Subject, switchMap, tap, catchError, of } from 'rxjs';
 import { ProductsService } from '../services/products.service';
-import { Product } from '../models/product';
+import { Product, CreateProductRequest, UpdateProductRequest, ListProductsResponse, ApiResponse } from '../models/product';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class ProductsStore {
-  private refresh$ = new Subject<void>();
-  private _items$ = new BehaviorSubject<Product[]>([]);
-  items$ = this._items$.asObservable();
-  loading$ = new BehaviorSubject<boolean>(false);
+  items: Product[] = [];
+  loading = false;
+  totalItems = 0;
+  currentPage = 1;
+  totalPages = 0;
 
   constructor(private svc: ProductsService) {
-    this.refresh$.pipe(
-      tap(() => this.loading$.next(true)),
-      switchMap(() => this.svc.list().pipe(
-        catchError(err => { console.error(err); return of([]); })
-      )),
-    ).subscribe(list => { this._items$.next(list); this.loading$.next(false); });
-
-    this.refresh();
+    this.load();
   }
 
-  refresh() { this.refresh$.next(); }
+  async load(page: number = 1, size: number = 10) {
+    this.loading = true;
+    try {
+      const response = await firstValueFrom(this.svc.list(page, size));
+      if (response?.success && response.data) {
+        this.items = response.data.items || [];
+        this.totalItems = response.data.totalItems;
+        this.currentPage = response.data.currentPage;
+        this.totalPages = response.data.totalPages;
+      } else {
+        this.items = [];
+        this.totalItems = 0;
+        this.currentPage = 1;
+        this.totalPages = 0;
+      }
+    } catch (err) {
+      console.error(err);
+      this.items = [];
+      this.totalItems = 0;
+      this.currentPage = 1;
+      this.totalPages = 0;
+    } finally {
+      this.loading = false;
+    }
+  }
 
-  create(p: Partial<Product>) { return this.svc.create(p).pipe(tap(() => this.refresh())); }
-  update(id: any, p: Partial<Product>) { return this.svc.update(id, p).pipe(tap(() => this.refresh())); }
-  delete(id: any) { return this.svc.delete(id).pipe(tap(() => this.refresh())); }
+  async create(p: CreateProductRequest) {
+    try {
+      const response = await firstValueFrom(this.svc.create(p));
+      if (response?.success) {
+        await this.load(this.currentPage);
+      }
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+
+  async update(id: string, p: UpdateProductRequest) {
+    try {
+      const response = await firstValueFrom(this.svc.update(id, p));
+      if (response?.success) {
+        await this.load(this.currentPage);
+      }
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+
+  async get(id: string) {
+    try {
+      const response = await firstValueFrom(this.svc.get(id));
+        if (response?.success && response.data) {
+          return response.data;
+        }
+        return null;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+
+  async delete(id: string) {
+    try {
+      const response = await firstValueFrom(this.svc.delete(id));
+      if (response?.success) {
+        await this.load(this.currentPage);
+      }
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+
+  async loadByCategory(category: string, page: number = 1, size: number = 10) {
+    this.loading = true;
+    try {
+      const response = await firstValueFrom(this.svc.getByCategory(category, page, size));
+      if (response?.success && response.data) {
+        this.items = response.data.items || [];
+        this.totalItems = response.data.totalItems;
+        this.currentPage = response.data.currentPage;
+        this.totalPages = response.data.totalPages;
+      }
+    } catch (err) {
+      console.error(err);
+      this.items = [];
+    } finally {
+      this.loading = false;
+    }
+  }
 }
