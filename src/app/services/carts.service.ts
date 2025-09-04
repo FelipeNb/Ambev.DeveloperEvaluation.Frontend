@@ -8,13 +8,13 @@ import {ApiResponse} from "./auth.service";
 export class CartsService {
   constructor(private api: ApiService) {}
 
-  list(page: number = 1, size: number = 10, order: string = 'branch asc'): Observable<ApiResponse<ListCartsResponse>> {
+  list(page: number = 1, size: number = 10, order: string = 'branch asc'): Observable<ListCartsResponse> {
     const params = {
       _page: page.toString(),
       _size: size.toString(),
       _order: order
     };
-    return this.api.get<ApiResponse<ListCartsResponse>>('Carts', params);
+    return this.api.get<ListCartsResponse>('Carts', params);
   }
 
   get(id: string): Observable<ApiResponse<Cart>> {

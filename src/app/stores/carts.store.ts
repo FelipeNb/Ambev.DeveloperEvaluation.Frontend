@@ -19,11 +19,11 @@ export class CartsStore {
     this.loading = true;
     try {
       const response = await firstValueFrom(this.svc.list(page, size));
-      if (response?.success && response.data) {
-        this.items = response.data.items || [];
-        this.totalItems = response.data.totalItems;
-        this.currentPage = response.data.currentPage;
-        this.totalPages = response.data.totalPages;
+      if (response) {
+        this.items = response.items || [];
+        this.totalItems = response.totalItems;
+        this.currentPage = response.currentPage;
+        this.totalPages = response.totalPages;
       } else {
         this.items = [];
         this.totalItems = 0;

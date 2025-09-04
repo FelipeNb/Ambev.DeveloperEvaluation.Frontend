@@ -5,7 +5,6 @@
       <button pButton label="Novo" (click)="openCreate()"></button>
     </div>
   </div>
-
   <p-table [value]="items" [loading]="loading">
     <ng-template pTemplate="header">
       <tr>
@@ -21,12 +20,12 @@
     <ng-template pTemplate="body" let-row>
       <tr>
         <td>{{row.saleNumber}}</td>
-        <td>{{getUserName(row.userId)}}</td>
+        <td>{{row.username}}</td>
         <td>{{row.branch || 'N/A'}}</td>
         <td>
           <ul style="margin: 0; padding-left: 20px;">
             <li *ngFor="let it of row.items">
-              {{getProductName(it.productId)}} x {{it.quantity}} ({{it.unitPrice | currency}})
+              {{it.productName}} x {{it.quantity}} ({{it.unitPrice | currency}})
             </li>
           </ul>
         </td>

@@ -7,6 +7,7 @@ export interface CartProduct {
   id: string;
   cartId: string;
   productId: string;
+  productName?: string;
   quantity: number;
   unitPrice: number;
   discountPercent: number;
@@ -20,6 +21,7 @@ export interface Cart {
   createdAt: string;
   updatedAt: string;
   saleNumber: number;
+  username?: string;
   branch?: string;
   cancelled: boolean;
   items?: CartProduct[] | CartItem[];
